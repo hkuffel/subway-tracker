@@ -7,7 +7,7 @@ from datetime import datetime
 import pytz
 
 import pymongo
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 
 from google.transit import gtfs_realtime_pb2
 from protobuf_to_dict import protobuf_to_dict
@@ -17,10 +17,11 @@ from key import key
 app = Flask(__name__)
 
 df = pd.read_csv('stops.csv')[['stop_id', 'stop_name', 'stop_lat', 'stop_lon', 'location_type', 'parent_station']]
-df.head()
 stops = {}
 for i in range(len(df)):
     stops[df.at[i, 'stop_id']] = df.at[i, 'stop_name']
+
+lines = {'1/2/3': '1', '4/5/6': '1', 'N/Q/R/W': '16', 'B/D/F/M': '21', 'A/C/E': '26', 'L': '2', 'G': '31', 'J/Z': '36', '7': '51'}
 
 def read_time(ts):
     ts = int(ts)
@@ -54,18 +55,18 @@ def trip_prettify(trips):
                     pass
     return trips
 
-def see_assigned(pfeed):
-    ps = []
-    for p in pfeed:
-        if 'trip_update' in p.keys():
-            t = p['trip_update']['trip']['start_date'] + ' ' + p['trip_update']['trip']['start_time']
+def see_assigned(feed):
+    fs = []
+    for f in feed:
+        if 'trip_update' in f.keys():
+            t = f['trip_update']['trip']['start_date'] + ' ' + f['trip_update']['trip']['start_time']
             if datetime.strptime(t, '%Y%m%d %H:%M:%S') > datetime.now():
-                ps.append(p)
-        elif 'vehicle' in p.keys():
-            t = p['vehicle']['trip']['start_date'] + ' ' + p['vehicle']['trip']['start_time']
+                fs.append(f)
+        elif 'vehicle' in f.keys():
+            t = f['vehicle']['trip']['start_date'] + ' ' + f['vehicle']['trip']['start_time']
             if datetime.strptime(t, '%Y%m%d %H:%M:%S') > datetime.now():
-                ps.append(p)
-    return ps
+                fs.append(f)
+    return fs
 
 # Create connection variable
 conn = 'mongodb://localhost:27017'
@@ -79,25 +80,42 @@ def refresh(line_num):
     feed.ParseFromString(response.content)
 
     subway_feed = protobuf_to_dict(feed)
-    pfeed = trip_prettify(subway_feed['entity'])
 
     db.trips.drop()
     unstarted = []
-    for t in see_assigned(pfeed):
+    for t in subway_feed['entity']:
         if 'trip_update' in t.keys() and 'stop_time_update' in t['trip_update'].keys():
             unstarted.append({'id': t['trip_update']['trip']['trip_id'], 
-            'pred_stops': [{'stop': stop['stop_id'], 'arrival': stop['arrival']['time'], 
-                            'departure': stop['departure']['time']} for stop in t['trip_update']['stop_time_update']]})
+            'pred_stops': [{'stop': stop['stop_id'], 'arrival': stop['arrival']['time']} for stop in t['trip_update']['stop_time_update']]})
         elif 'vehicle' in t.keys() and 'timestamp' in t['vehicle'].keys():
             unstarted.append({'id': t['vehicle']['trip']['trip_id'], 'timestamp': t['vehicle']['timestamp']})
     db.trips.insert_many(unstarted)
     return list(db.trips.find())
 
+def find_trains(tl, stop):
+    trains = []
+    for t in tl:
+        if 'pred_stops' in t.keys():
+            for s in t['pred_stops']:
+                if s['stop'] == stop and s['arrival'] > time.time():
+                    s['arrival'] = read_time(s['arrival'])
+                    try:
+                        s['departure'] = read_time(s['departure'])
+                    except:
+                        pass
+                    s['stop'] = stops[s['stop']]
+                    trains.append(s)
+    trains = sorted(trains, key=lambda i: i['arrival'])
+    return trains
+
+
 @app.route('/')
 def index():
     line_num = 26
-    trips = refresh(line_num)
-    return render_template('index.html', trips=trips)
+    stop = 'A15S'
+    station = stops[stop]
+    trips = find_trains(refresh(line_num), stop)
+    return render_template('index.html', trips=trips, station=station)
 
 if __name__ == "__main__":
     app.run(debug=True)
