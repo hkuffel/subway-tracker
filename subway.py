@@ -122,8 +122,7 @@ def find_trains(tl, stop):
     trains = sorted(trains, key=lambda i: i['arrival'])
     return trains
 
-''' TODO: Right now the app only works for one line and one 
-train station, but we eventually want the user to choose these.'''
+''' TODO: Right now the line and the station are hard-coded into the app, but we eventually want the user to choose these.'''
 
 @app.route('/')
 def index():
