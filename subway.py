@@ -16,12 +16,15 @@ from key import key
 
 app = Flask(__name__)
 
+# Creating dictionary to map stop ids to the station name
 df = pd.read_csv('stops.csv')[['stop_id', 'stop_name', 'stop_lat', 'stop_lon', 'location_type', 'parent_station']]
 stops = {}
 for i in range(len(df)):
     stops[df.at[i, 'stop_id']] = df.at[i, 'stop_name']
 
-lines = {'1/2/3': '1', '4/5/6': '1', 'N/Q/R/W': '16', 'B/D/F/M': '21', 'A/C/E': '26', 'L': '2', 'G': '31', 'J/Z': '36', '7': '51'}
+# Dict mapping subway lines to the proper url suffix
+lines = {'1/2/3': '1', '4/5/6': '1', 'N/Q/R/W': '16', 'B/D/F/M': '21', 
+        'A/C/E': '26', 'L': '2', 'G': '31', 'J/Z': '36', '7': '51'}
 
 # Function to convert unix timestamp into something more readable
 def read_time(ts):
@@ -78,6 +81,8 @@ conn = 'mongodb://localhost:27017'
 client = pymongo.MongoClient(conn)
 db = client.trip_db
 
+''' TODO: Change mongo connection from localhost to something production-friendly'''
+
 # Function for retrieving fresh data from the MTA
 def refresh(line_num):
     feed = gtfs_realtime_pb2.FeedMessage()
@@ -97,7 +102,7 @@ def refresh(line_num):
         elif 'vehicle' in t.keys() and 'timestamp' in t['vehicle'].keys():
             unstarted.append({'id': t['vehicle']['trip']['trip_id'], 'timestamp': t['vehicle']['timestamp']})
     db.trips.insert_many(unstarted)
-    
+
     return list(db.trips.find())
 
 # Function to find trains heading to a specific stop and sort them by arrival time
