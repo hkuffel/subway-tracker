@@ -23,6 +23,7 @@ for i in range(len(df)):
 
 lines = {'1/2/3': '1', '4/5/6': '1', 'N/Q/R/W': '16', 'B/D/F/M': '21', 'A/C/E': '26', 'L': '2', 'G': '31', 'J/Z': '36', '7': '51'}
 
+# Function to convert unix timestamp into something more readable
 def read_time(ts):
     ts = int(ts)
     gmt = pytz.timezone('GMT')
@@ -31,6 +32,8 @@ def read_time(ts):
     edt = gdt.astimezone(pytz.timezone('US/Eastern'))
     return edt.strftime('%Y-%m-%d %I:%M:%S %p')
 
+# Function to replace aspects of the MTA feed with their more user-friendly alternatives i.e. '125th St' instead of 'A15'
+# This function isn't currently being used in the app, but was in a previous version
 def trip_prettify(trips):
     for trip in trips:
         if 'trip_update' in trip.keys():
@@ -55,6 +58,8 @@ def trip_prettify(trips):
                     pass
     return trips
 
+# Function to pare down the list of trips returned to just ones that haven't started yet
+# This function isn't currently being used in the app, but was in a previous version
 def see_assigned(feed):
     fs = []
     for f in feed:
@@ -79,8 +84,10 @@ def refresh(line_num):
     response = requests.get(f'http://datamine.mta.info/mta_esi.php?key={key}&feed_id={str(line_num)}')
     feed.ParseFromString(response.content)
 
+    # Taking the transit data from its specific format into a dictionary
     subway_feed = protobuf_to_dict(feed)
 
+    #Dumping the collected the data into a MongoDB collection
     db.trips.drop()
     unstarted = []
     for t in subway_feed['entity']:
@@ -90,8 +97,10 @@ def refresh(line_num):
         elif 'vehicle' in t.keys() and 'timestamp' in t['vehicle'].keys():
             unstarted.append({'id': t['vehicle']['trip']['trip_id'], 'timestamp': t['vehicle']['timestamp']})
     db.trips.insert_many(unstarted)
+    
     return list(db.trips.find())
 
+# Function to find trains heading to a specific stop and sort them by arrival time
 def find_trains(tl, stop):
     trains = []
     for t in tl:
@@ -108,6 +117,8 @@ def find_trains(tl, stop):
     trains = sorted(trains, key=lambda i: i['arrival'])
     return trains
 
+''' TODO: Right now the app only works for one line and one 
+train station, but we eventually want the user to choose these.'''
 
 @app.route('/')
 def index():
