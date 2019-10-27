@@ -18,12 +18,57 @@
       <div class="jumbotron jumbotron-fluid">
           <div class="container">
               <h1 class="display-4">Welcome!</h1><br>
-              <p class="lead">This web app allows you to see upcoming trains at a desired subway stop. For instance, if you  
-                wanted to know when the next southbound A train will come to 125th Street, you would head to display/A/A15S.
+              <p class="lead">This web app allows you to see upcoming trains at a desired subway stop. To see results,
+                just choose your train and then find your stop from the below dropdowns.
               </p>
           </div>
+        <div class="row">
+          <div class="col-md-6 col-sm-12">
+            <div class="form-group">
+              <label for="exampleFormControlSelect1">Choose a Line</label>
+              <select class="form-control" id="lineform">
+                {% for line in lines %}
+                  <option>{{ line }}</option>
+                  {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6 col-sm-12">
+            <div class="form-group">
+              <label for="exampleFormControlSelect1">Choose a Stop</label>
+              <select class="form-control" id="stopform">
+                {% for stop in stops %}
+                  {% if 'N' in stop %}
+                    <option value="{{ stop }}">{{ stops[stop] }} Northbound</option>
+                  {% elif 'S' in stop %}
+                    <option value="{{ stop }}">{{ stops[stop] }} Southbound</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+        <a class="btn btn-primary" href="#" id="process_input" role="button">Let's See It!</a>
       </div>
     </div>
+    <div class="container text-left">
+      <div id="trainfeed"></div>
+    </div>
+    </div>
+    <script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+  <script type=text/javascript>
+      $('a#process_input').click(function() {
+      $.getJSON('/display', {
+        line: $( "#lineform" ).val(),
+        stop: $( "#stopform" ).val()
+      }, function(result) {
+          $("div#trainfeed").prepend(result.data);
+        });
+      });
+  </script>
 </body>
 
 </html>
