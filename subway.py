@@ -6,15 +6,19 @@ import time
 from datetime import datetime
 import pytz
 
-import pymongo
+from flask_pymongo import PyMongo
 from flask import Flask, render_template, request, jsonify
 
 from google.transit import gtfs_realtime_pb2
 from protobuf_to_dict import protobuf_to_dict
 
-from config import API_KEY
+from config import API_KEY, MONGO_URI
 
 app = Flask(__name__)
+app.config["MONGO_URI"] = MONGO_URI
+
+mongo = PyMongo(app)
+db = mongo.db
 
 # Creating dictionary to map stop ids to the station name
 df = pd.read_csv('stops.csv')[['stop_id', 'stop_name', 'stop_lat', 'stop_lon', 'location_type', 'parent_station']]
@@ -77,9 +81,9 @@ def see_assigned(feed):
     return fs
 
 # Create connection variable
-conn = 'mongodb://localhost:27017'
-client = pymongo.MongoClient(conn)
-db = client.trip_db
+# conn = 'mongodb+srv://hk:jXmCTbdxj1c8HXhP@cluster0-htedx.mongodb.net/test?retryWrites=true&w=majority'
+# client = pymongo.MongoClient(conn)
+# db = client.trip_db
 
 ''' TODO: Change mongo connection from localhost to something production-friendly'''
 
