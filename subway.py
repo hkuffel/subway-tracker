@@ -7,7 +7,7 @@ from datetime import datetime
 import pytz
 
 import pymongo
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 
 from google.transit import gtfs_realtime_pb2
 from protobuf_to_dict import protobuf_to_dict
@@ -18,9 +18,8 @@ app = Flask(__name__)
 
 # Creating dictionary to map stop ids to the station name
 df = pd.read_csv('stops.csv')[['stop_id', 'stop_name', 'stop_lat', 'stop_lon', 'location_type', 'parent_station']]
-stops = {}
-for i in range(len(df)):
-    stops[df.at[i, 'stop_id']] = df.at[i, 'stop_name']
+stop_pairs = zip(df['stop_id'], df['stop_name'])
+stops = dict(stop_pairs)
 
 # Dict mapping subway lines to the proper url suffix
 lines = {'1': '1', '2': '1', '3': '1', '4': '1', '5': '1', '6': '1', 
@@ -135,14 +134,27 @@ def find(tl, stop):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', lines=lines, stops=stops)
 
-@app.route('/<line>/<stop>')
-def display(line, stop):
-    station = stops[stop]
-    trips = collect(refresh(lines[line]))
-    trains = find(trips, stop)
-    return render_template('results.html', trains=trains, station=station, line=line, stop=stop)
+# @app.route('/display')
+# def display_from_dropdown():
+#     line = request.form.get()
+#     station = stops[stop]
+#     trips = collect(refresh(lines[line]))
+#     trains = find(trips, stop)
+#     return render_template('results.html', trains=trains, station=station, line=line, stop=stop)
+
+@app.route('/display')
+def display():
+    try:
+        line = request.args.get('line', type=str)
+        stop = request.args.get('stop', type=str)
+        station = stops[stop]
+        trips = collect(refresh(lines[line]))
+        trains = find(trips, stop)
+        return jsonify({'data': render_template('trainfeed.html', trains=trains, stop=stop, station=station)})
+    except Exception as e:
+        return str(e)
 
 if __name__ == "__main__":
     app.run(debug=True)
