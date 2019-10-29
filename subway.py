@@ -80,12 +80,6 @@ def see_assigned(feed):
                 fs.append(f)
     return fs
 
-# Create connection variable
-# conn = 'mongodb+srv://hk:jXmCTbdxj1c8HXhP@cluster0-htedx.mongodb.net/test?retryWrites=true&w=majority'
-# client = pymongo.MongoClient(conn)
-# db = client.trip_db
-
-''' TODO: Change mongo connection from localhost to something production-friendly'''
 
 # Function for retrieving fresh data from the MTA
 def refresh(line_num):
