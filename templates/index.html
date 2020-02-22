@@ -7,6 +7,11 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>When's the Train?</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link href="{{ url_for('static', filename='c3.css') }}" rel='stylesheet'>
+  <script src="{{ url_for('static', filename='c3.min.js') }}"></script>
+  <style>
+
+  </style>
 </head>
 
 <body>
@@ -18,8 +23,8 @@
       <div class="jumbotron jumbotron-fluid">
           <div class="container">
               <h1 class="display-4">Welcome!</h1><br>
-              <p class="lead">This web app allows you to see upcoming trains at a desired subway stop. To see results,
-                just choose your train and then find your stop from the below dropdowns.
+              <p class="lead">Choose your train line and your stop to see when the next train is coming. Or, scroll down to see 
+                how late each train line has been today.
               </p>
           </div>
         <div class="row">
@@ -52,23 +57,24 @@
       </div>
     </div>
     <div class="container text-left">
-      <div id="trainfeed"></div>
+      <div class="row">
+        <div id="trainfeed"></div>
+      </div>
     </div>
+    <div class="container text-center">
+      <h2 class="display-4">Total Train Delays Today by Line</h2>
+      <div class="row">
+        <div id="delays"></div>
+        <p class="lead" id="loading">Loading...</p>
+      </div>
     </div>
-    <script
-  src="https://code.jquery.com/jquery-3.2.1.min.js"
-  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-  crossorigin="anonymous"></script>
-  <script type=text/javascript>
-      $('a#process_input').click(function() {
-      $.getJSON('/display', {
-        line: $( "#lineform" ).val(),
-        stop: $( "#stopform" ).val()
-      }, function(result) {
-          $("div#trainfeed").prepend(result.data);
-        });
-      });
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" 
+    integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+    crossorigin="anonymous">
   </script>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 
 </html>
