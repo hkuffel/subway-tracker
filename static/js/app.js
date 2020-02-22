@@ -86,7 +86,3 @@ d3.json("/api/delays").then(function(delayData) {
     .attr("transform", `translate(0, ${chartHeight})`)
     .call(bottomAxis);
 });
-
-setTimeout(function () {
-  $( "#loading" ).remove();
-}, 11000);
