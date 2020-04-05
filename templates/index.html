@@ -28,27 +28,39 @@
               </p>
           </div>
         <div class="row">
-          <div class="col-md-6 col-sm-12">
+          <div class="col-md-4 col-sm-12">
             <div class="form-group">
               <label for="exampleFormControlSelect1">Choose a Line</label>
               <select class="form-control" id="lineform">
+                <option>Select</option>
                 {% for line in lines %}
                   <option>{{ line }}</option>
                   {% endfor %}
               </select>
             </div>
           </div>
-          <div class="col-md-6 col-sm-12">
+          <div class="col-md-4 col-sm-12">
             <div class="form-group">
               <label for="exampleFormControlSelect1">Choose a Stop</label>
               <select class="form-control" id="stopform">
-                {% for stop in stops %}
+                <option>Please Choose Line</option>
+                <!-- {% for stop in stops %}
                   {% if 'N' in stop %}
                     <option value="{{ stop }}">{{ stops[stop] }} Northbound</option>
                   {% elif 'S' in stop %}
                     <option value="{{ stop }}">{{ stops[stop] }} Southbound</option>
                   {% endif %}
-                {% endfor %}
+                {% endfor %} -->
+              </select>
+            </div>
+          </div>
+          <div class="col-md-4 col-sm-12">
+            <div class="form-group">
+              <label for="exampleFormControlSelect1">Choose a Direction</label>
+              <select class="form-control" id="dirform">
+                <option>Select</option>
+                  <option value="N">Northbound</option>
+                  <option value="S">Southbound</option>
               </select>
             </div>
           </div>

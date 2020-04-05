@@ -1,10 +1,104 @@
-$('a#process_input').click(function() {
+$('a#process_input').click(function($e) {
+    $e.preventDefault();
     $.getJSON('/display', {
       line: $( "#lineform" ).val(),
-      stop: $( "#stopform" ).val()
+      stop: $( "#stopform" ).val(),
+      direction: $( "#dirform" ).val()
     }, function(result) {
-        $("div#trainfeed").prepend(result.data);
+      console.log(result);
+      var $feed = $("div#trainfeed");
+      $feed.html('');
+      $feed.prepend(result.data);
       });
+});
+
+$("#lineform").change(function() {
+
+	var $dropdown = $(this);
+
+	$.getJSON("static/js/stop_dir.json", function(data) {
+	
+    var key = $dropdown.val();
+    console.log(key)
+		var vals = [];
+							
+		switch(key) {
+			case '1':
+        idx = data.one.ids;
+				vals = data.one.names;
+				break;
+			case '2':
+        idx = data.two.ids;
+        vals = data.two.names;
+        break;
+			case '3':
+        idx = data.three.ids;
+				vals = data.three.names;
+				break;
+			case '4':
+        idx = data.four.ids;
+				vals = data.four.names;
+        break;
+      case '5':
+        idx = data.five.ids;
+        vals = data.five.names;
+        break;
+      case '6':
+        vals = data.six;
+        break;
+      case '7':
+        vals = data.seven;
+        break;
+      case 'A':
+        vals = data.A;
+        break;
+      case 'B':
+        vals = data.B;
+        break;
+      case 'C':
+        vals = data.C;
+        break;
+      case 'D':
+        vals = data.D;
+        break;
+      case 'E':
+        vals = data.E;
+        break;
+      case 'F':
+        vals = data.F;
+        break;
+      case 'M':
+        vals = data.M;
+        break;
+      case 'L':
+        vals = data.L;
+        break;
+      case 'J':
+        vals = data.J;
+        break;
+      case 'Z':
+        vals = data.Z;
+        break;
+      case 'N':
+        vals = data.N;
+        break;
+      case 'Q':
+        vals = data.Q;
+        break;
+      case 'R':
+        vals = data.R;
+        break;
+			case 'base':
+				vals = ['Please Choose Line'];
+		}
+		
+		var $secondChoice = $("#stopform");
+		$secondChoice.empty();
+		$.each(vals, function(i, value) {
+			$secondChoice.append("<option value=" + idx[i] + ">" + value + "</option>");
+		});
+
+	});
 });
 
 /////////////////////////////////////////////////////////////////
