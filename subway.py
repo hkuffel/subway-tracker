@@ -48,7 +48,9 @@ class JSONEncoder(json.JSONEncoder):
 # Creating dictionary to map stop ids to the station name
 df = pd.read_csv('stops.csv')[['stop_id', 'stop_name', 'stop_lat', 'stop_lon', 'location_type', 'parent_station']]
 stop_pairs = zip(df['stop_id'], df['stop_name'])
+# stop_pairs_reversed = zip(df['stop_name'], df['stop_id'])
 stops = dict(stop_pairs)
+# r_stops = dict(stop_pairs_reversed)
 
 # Dict mapping subway lines to the proper url suffix
 lines = {'1': '1', '2': '1', '3': '1', '4': '1', '5': '1', '6': '1', 
@@ -168,10 +170,10 @@ def record_predictions(trips):
     return list(db.predictions.find())
 
 # Function to find trains heading to a specific stop and sort them by arrival time
-def find(tl, stop):
+def find(tl, stop, line):
     trains = []
     for t in tl:
-        if 'pred_stops' in t.keys():
+        if 'pred_stops' in t.keys() and t['line'] == line:
             for s in t['pred_stops']:
                 if s['stop'] == stop and s['arrival'] > time.time():
                     # Converting the timestamps and stop codes into readable versions
@@ -183,7 +185,7 @@ def find(tl, stop):
     trains = sorted(trains, key=lambda i: i['arrival'])
     return trains
 
-# Function to wipe and reset the delay database; runs every day at midnight
+# Function to wipe and reset the delay database; would run every day at midnight when app is at full capacity
 def reset_delays():
     db.trips.drop()
     db.predictions.drop()
@@ -212,7 +214,10 @@ def reckoning(trips):
             if pred['stop'] == trip['cs'] or pred['stop'][:-1] == trip['cs'] or pred['stop'] == trip['cs'][:-1]:
                 db.delays.update_one(
                     {'line': str(trip['id'][7])},
-                    {'$inc': {'count': int((trip['timestamp'] - pred['arrival']))}})
+                    {'$inc': {
+                        'count': int((trip['timestamp'] - pred['arrival']))
+                        }
+                    })
     return list(db.delays.find())
 
 @app.route('/')
@@ -224,10 +229,14 @@ def display():
     try:
         line = request.args.get('line', type=str)
         stop = request.args.get('stop', type=str)
+        d = request.args.get('direction', type=str)
+        stop = stop + d
         station = stops[stop]
         trips = collect(refresh(lines[line]))
-        trains = find(trips, stop)
-        return jsonify({'data': render_template('trainfeed.html', trains=trains, stop=stop, station=station)})
+        trains = find(trips, stop, line)
+        return jsonify(
+            {'data': render_template('trainfeed.html', trains=trains, stop=stop, station=station, trips=trips)}
+            )
     except Exception as e:
         return str(e)
 
@@ -255,7 +264,7 @@ def predictions():
 
 @app.route('/api/delays')
 def reckon():
-    codes = ['1', '16', '21', '26', '2', '31', '36', '51']
+    # codes = ['1', '16', '21', '26', '2', '31', '36', '51']
     # feed = []
     # for code in codes:
     #     try:
@@ -263,12 +272,12 @@ def reckon():
     #     except:
     #         pass
     reckoning(db.trips.find())
-    return JSONEncoder().encode(list(db.delays.find()))
+    return JSONEncoder().encode(sorted(list(db.delays.find()), key=lambda k: k['line']))
 
 @app.route('/api/delays/reset')
 def reset():
     reset_delays()
-    return JSONEncoder().encode(list(db.delays.find()))
+    return JSONEncoder().encode(sorted(list(db.delays.find()), key=lambda k: k['line']))
 
 @celery.task
 def freshen():
