@@ -44,31 +44,40 @@ $("#lineform").change(function() {
         vals = data.five.names;
         break;
       case '6':
-        vals = data.six;
+        idx = data.six.ids;
+        vals = data.six.names;
         break;
       case '7':
-        vals = data.seven;
+        idx = data.seven.ids;
+        vals = data.seven.names;
         break;
       case 'A':
-        vals = data.A;
+        idx = data.A.ids;
+        vals = data.A.names;
         break;
       case 'B':
-        vals = data.B;
+        idx = data.B.ids;
+        vals = data.B.names;
         break;
       case 'C':
-        vals = data.C;
+        idx = data.C.ids;
+        vals = data.C.names;
         break;
       case 'D':
-        vals = data.D;
+        idx = data.D.ids;
+        vals = data.D.names;
         break;
       case 'E':
-        vals = data.E;
+        idx = data.E.ids;
+        vals = data.E.names;
         break;
       case 'F':
-        vals = data.F;
+        idx = data.F.ids;
+        vals = data.F.names;
         break;
       case 'M':
-        vals = data.M;
+        idx = data.M.ids;
+        vals = data.M.names;
         break;
       case 'L':
         vals = data.L;
@@ -121,7 +130,8 @@ var chartHeight = svgHeight - chartMargin.top - chartMargin.bottom;
 // Select body, append SVG area to it, and set the dimensions
 var svg = d3.select("#delays")
   .append("svg")
-  .attr("viewbox", "0 0 100 75")
+  .attr("viewbox", "0 0 0 0")
+  .attr("justify-content", "center")
   .attr("preserveAspectRatio", "none")
   .attr("height", svgHeight)
   .attr("width", svgWidth);
