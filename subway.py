@@ -53,11 +53,11 @@ stops = dict(stop_pairs)
 # r_stops = dict(stop_pairs_reversed)
 
 # Dict mapping subway lines to the proper url suffix
-lines = {'1': '1', '2': '1', '3': '1', '4': '1', '5': '1', '6': '1', 
-        'N': '16', 'Q': '16', 'R': '16', 'W': '16', 
-        'B': '21', 'D': '21', 'F': '21', 'M': '21', 
-        'A': '26', 'C': '26', 'E': '26',
-        'L': '2', 'G': '31', 'J': '36', 'Z': '36', '7': '51'}
+lines = {'1': '1', '2': '1', '3': '1', '4': '1', '5': '1', '6': '1',
+        '7': '51', 'A': '26', 'C': '26', 'E': '26', 'B': '21',
+        'D': '21', 'F': '21', 'M': '21', 'G': '31',
+        'N': '16', 'Q': '16', 'R': '16', 'W': '16',  
+        'L': '2',  'J': '36', 'Z': '36'}
 
 # Function to convert unix timestamp into something more readable
 def read_time(stamp):
