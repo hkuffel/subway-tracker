@@ -25,4 +25,4 @@ CELERYBEAT_SCHEDULE = {
         # Every minute
         'schedule': crontab(minute=0, hour=5),
     }
-} 
+}
