@@ -4,21 +4,25 @@ import os
 import json
 import platform
 
+
 def init_browser():
     if platform.system().lower() == 'windows'.lower():
         executable_path = {
-            'executable_path': 
+            'executable_path':
             os.path.join(os.getcwd(), 'chromedriver.exe')}
         return Browser('chrome', **executable_path, headless=True)
     else:
         return Browser('chrome', headless=True)
 
+
 br = init_browser()
+
 
 def get_html(browser, url):
     browser.visit(url)
     html = browser.html
     return html
+
 
 def get_listings(html):
     soup = BeautifulSoup(html, "html.parser")
@@ -29,8 +33,13 @@ def get_listings(html):
             collection.append(stop.find('span', class_='emphasized').text)
         except Exception as e:
             print(e)
-    collection = [name.replace('\n', '').replace(' /', '').replace('   ', '') for name in collection]
-    collection = [name.replace('\t', '').replace('Street', 'St').replace('Avenue', 'Av').replace('Road', 'Rd').replace('Square', 'Sq') for name in collection]
+    collection = [
+        name.replace('\n', '').replace(' /', '').replace('   ', '') for name in collection
+        ]
+    collection = [
+        name.replace('\t', '').replace('Street', 'St').replace('Avenue', 'Av')
+            .replace('Road', 'Rd').replace('Square', 'Sq') for name in collection
+            ]
     for i, name in enumerate(collection):
         if name[0] == ' ':
             collection[i] = name[1:]
@@ -39,8 +48,9 @@ def get_listings(html):
     collection = [name.replace('-', ' - ') for name in collection]
     return collection
 
+
 codes = {'A': 'aline', 'C': 'cline', 'E': 'eline',
-         'B': 'bline', 'D': 'dline', 'F': 'fline', 
+         'B': 'bline', 'D': 'dline', 'F': 'fline',
          'M': 'mline', 'L': 'lline', 'J': 'jline',
          'Z': 'zline', 'N': 'nline', 'Q': 'qline',
          'R': 'rline', '1': 'oneline', '2': 'twoline',
