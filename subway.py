@@ -118,7 +118,8 @@ def see_assigned(feed):
     fs = []
     for f in feed:
         if 'trip_update' in f.keys():
-            t = f['trip_update']['trip']['start_date'] + ' ' + f['trip_update']['trip']['start_time']
+            t = (f['trip_update']['trip']['start_date']
+                 + ' ' + f['trip_update']['trip']['start_time'])
             if datetime.strptime(t, '%Y%m%d %H:%M:%S') > datetime.now():
                 fs.append(f)
         elif 'vehicle' in f.keys():
