@@ -4,40 +4,45 @@ import json
 from bson import ObjectId
 
 import time
-from datetime import date, datetime
+from datetime import datetime
 import pytz
 
-import pymongo
 from flask_pymongo import PyMongo
 from flask import Flask, render_template, request, jsonify
 from celery import Celery
-import celeryconfig 
+import celeryconfig
 
 from google.transit import gtfs_realtime_pb2
 from protobuf_to_dict import protobuf_to_dict
 
-from config import API_KEY, MONGO_URI, BROKER_URL, CELERY_RESULT_BACKEND
+from config import API_KEY, MONGO_URI, BROKER_URL
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = MONGO_URI
+
 
 def make_celery(app):
     celery = Celery(app.import_name, broker=BROKER_URL)
     celery.config_from_object(celeryconfig)
     celery.conf.update(app.config)
     TaskBase = celery.Task
+
     class ContextTask(TaskBase):
         abstract = True
+
         def __call__(self, *args, **kwargs):
             with app.app_context():
                 return TaskBase.__call__(self, *args, **kwargs)
+
     celery.Task = ContextTask
     return celery
+
 
 celery = make_celery(app)
 
 mongo = PyMongo(app)
 db = mongo.db
+
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -45,19 +50,28 @@ class JSONEncoder(json.JSONEncoder):
             return str(o)
         return json.JSONEncoder.default(self, o)
 
+
 # Creating dictionary to map stop ids to the station name
-df = pd.read_csv('stops.csv')[['stop_id', 'stop_name', 'stop_lat', 'stop_lon', 'location_type', 'parent_station']]
+df = pd.read_csv('stops.csv')[
+    [
+        'stop_id', 'stop_name', 'stop_lat', 'stop_lon',
+        'location_type', 'parent_station'
+        ]
+    ]
 stop_pairs = zip(df['stop_id'], df['stop_name'])
 # stop_pairs_reversed = zip(df['stop_name'], df['stop_id'])
 stops = dict(stop_pairs)
 # r_stops = dict(stop_pairs_reversed)
 
 # Dict mapping subway lines to the proper url suffix
-lines = {'1': '1', '2': '1', '3': '1', '4': '1', '5': '1', '6': '1',
-        '7': '51', 'A': '26', 'C': '26', 'E': '26', 'B': '21',
-        'D': '21', 'F': '21', 'M': '21', 'G': '31',
-        'N': '16', 'Q': '16', 'R': '16', 'W': '16',  
-        'L': '2',  'J': '36', 'Z': '36'}
+lines = {
+    '1': '1', '2': '1', '3': '1', '4': '1', '5': '1', '6': '1',
+    '7': '51', 'A': '26', 'C': '26', 'E': '26', 'B': '21',
+    'D': '21', 'F': '21', 'M': '21', 'G': '31',
+    'N': '16', 'Q': '16', 'R': '16', 'W': '16',
+    'L': '2',  'J': '36', 'Z': '36'
+    }
+
 
 # Function to convert unix timestamp into something more readable
 def read_time(stamp):
@@ -66,8 +80,11 @@ def read_time(stamp):
     edt = gdt.astimezone(pytz.timezone('US/Eastern'))
     return edt.strftime('%Y-%m-%d %I:%M:%S %p')
 
-# Function to replace aspects of the MTA feed with their more user-friendly alternatives i.e. '125th St' instead of 'A15'
-# This function isn't currently being used in the app, but was in a previous version
+
+# Function to replace aspects of the MTA feed with their more
+# user-friendly alternatives i.e. '125th St' instead of 'A15'
+# This function isn't currently being used in the app,
+# but it was in a previous version
 def trip_prettify(trips):
     for trip in trips:
         if 'trip_update' in trip.keys():
@@ -79,7 +96,7 @@ def trip_prettify(trips):
                     s['departure']['time'] = read_time(s['departure']['time'])
                     try:
                         s['stop_id'] = stops[s['stop_id']]
-                    except:
+                    except Exception:
                         pass
         elif 'vehicle' in trip.keys():
             v = trip['vehicle']
@@ -88,12 +105,15 @@ def trip_prettify(trips):
             if 'stop_id' in v.keys():
                 try:
                     v['stop_id'] = stops[v['stop_id']]
-                except:
+                except Exception:
                     pass
     return trips
 
-# Function to pare down the list of trips returned to just ones that haven't started yet
-# This function isn't currently being used in the app, but was in a previous version
+
+# Function to pare down the list of trips returned to just ones
+# that haven't started yet
+# This function isn't currently being used in the app,
+# but it was in a previous version
 def see_assigned(feed):
     fs = []
     for f in feed:
@@ -107,15 +127,19 @@ def see_assigned(feed):
                 fs.append(f)
     return fs
 
+
 # Function for retrieving fresh data from the MTA
 def refresh(line_num):
     feed = gtfs_realtime_pb2.FeedMessage()
-    response = requests.get(f'http://datamine.mta.info/mta_esi.php?key={API_KEY}&feed_id={str(line_num)}')
+    response = requests.get(
+        f'http://datamine.mta.info/mta_esi.php?key={API_KEY}&feed_id={str(line_num)}'
+        )
     feed.ParseFromString(response.content)
 
     # Taking the transit data from its specific format into a dictionary
     subway_feed = protobuf_to_dict(feed)
     return subway_feed['entity']
+
 
 # Function to comb through trip parts and combine those that share ids
 def combine(trips):
@@ -126,8 +150,9 @@ def combine(trips):
     trips = [trip for trip in trips if 'pred_stops' in trip.keys()]
     return trips
 
+
 def collect(feed):
-    db.trips.drop() # Dropping the Mongo collection if one exists
+    db.trips.drop()  # Dropping the Mongo collection if one exists
     trips = []
     for t in feed:
         if 'trip_update' in t.keys() and 'stop_time_update' in t['trip_update'].keys():
@@ -138,16 +163,24 @@ def collect(feed):
             try:
                 trips.append({
                     'id': trip_id,
-                    'line': route_id, 
-                    'pred_stops': [{'stop': stop['stop_id'], 'arrival': stop['arrival']['time']} for stop in stops]
+                    'line': route_id,
+                    'pred_stops': [
+                        {
+                            'stop': stop['stop_id'],
+                            'arrival': stop['arrival']['time']
+                            } for stop in stops
+                        ]
                     })
-            except KeyError: # Not every trip in the MTA feed will have arrival and departure predictions
+            except KeyError:  # Not every trip in the MTA feed will have predictions
                 pass
         elif 'vehicle' in t.keys() and 'timestamp' in t['vehicle'].keys():
-            tri = {'id': t['vehicle']['trip']['trip_id'], 'timestamp': t['vehicle']['timestamp']}
+            tri = {
+                'id': t['vehicle']['trip']['trip_id'],
+                'timestamp': t['vehicle']['timestamp']
+                }
             try:
                 tri['cs'] = t['vehicle']['stop_id']
-            except:
+            except Exception:
                 pass
             trips.append(tri)
     # Combine the two elements of each trip
@@ -156,20 +189,24 @@ def collect(feed):
     db.trips.insert_many(trips)
     return list(db.trips.find())
 
-# Function to find trips that haven't started and record the first arrival time predictions in the prediction database
+
+# Function to find trips that haven't started and record the
+# first arrival time predictions in the prediction database
 def record_predictions(trips):
     for t in trips:
         if db.predictions.find({'id': t['id']}).count() > 0:
             try:
                 if len(t['pred_stops']) < 2:
                     db.predictions.delete_one({'id': t['id']})
-            except:
+            except Exception:
                 pass
         else:
             db.predictions.insert_one(t)
     return list(db.predictions.find())
 
-# Function to find trains heading to a specific stop and sort them by arrival time
+
+# Function to find trains heading to a
+# specific stop and sort them by arrival time
 def find(tl, stop, line):
     trains = []
     for t in tl:
@@ -185,44 +222,57 @@ def find(tl, stop, line):
     trains = sorted(trains, key=lambda i: i['arrival'])
     return trains
 
-# Function to wipe and reset the delay database; would run every day at midnight when app is at full capacity
+
+# Function to wipe and reset the delay database
+# would run every day at midnight when app is at full capacity
 def reset_delays():
     db.trips.drop()
     db.predictions.drop()
     db.delays.drop()
-    line_list = ['1', '2', '3', '4', '5', '6', '7', 'A', 'B', 'C',
-     'D', 'E', 'F', 'G', 'H', 'J', 'L', 'M', 'N', 'Q', 'R', 'Z']
+    line_list = [
+        '1', '2', '3', '4', '5', '6', '7', 'A', 'B', 'C',
+        'D', 'E', 'F', 'G', 'H', 'J', 'L', 'M', 'N', 'Q', 'R', 'Z'
+        ]
 
-    colors = ['#EE352E', '#EE352E', '#EE352E', '#00933C', '#00933C',
-     '#00933C', '#B933AD', '#2850AD', '#FF6319', '#2850AD', '#FF6319', 
-     '#2850AD', '#FF6319', '#6CBE45', '#2850AD', '#996633', '#A7A9AC', 
-     '#FF6319', '#FCCC0A', '#FCCC0A', '#FCCC0A', '#996633']
+    colors = [
+        '#EE352E', '#EE352E', '#EE352E', '#00933C', '#00933C',
+        '#00933C', '#B933AD', '#2850AD', '#FF6319', '#2850AD', '#FF6319',
+        '#2850AD', '#FF6319', '#6CBE45', '#2850AD', '#996633', '#A7A9AC',
+        '#FF6319', '#FCCC0A', '#FCCC0A', '#FCCC0A', '#996633'
+        ]
 
-    delay_cache = [{'line': line_list[i], 'count': 0, 'color': colors[i]} for i in range(len(colors))]
+    delay_cache = [
+        {'line': line_list[i], 'count': 0, 'color': colors[i]} for i in range(len(colors))
+        ]
     db.delays.insert_many(delay_cache)
 
-# Function to match current trips with their initial predictions and add the difference in times to the delay collection
+
+# Function to match current trips with their initial predictions
+# and add the difference in times to the delay collection
 def reckoning(trips):
     trips = [trip for trip in trips if 'timestamp' in trip.keys() and 'cs' in trip.keys()]
     for trip in trips:
         preds = list(db.predictions.find({'id': trip['id']}).limit(1))
         try:
             preds = preds[0]['pred_stops']
-        except:
+        except Exception:
             continue
         for pred in preds:
-            if pred['stop'] == trip['cs'] or pred['stop'][:-1] == trip['cs'] or pred['stop'] == trip['cs'][:-1]:
+            if (pred['stop'] == trip['cs']
+                    or pred['stop'][:-1] == trip['cs'] or pred['stop'] == trip['cs'][:-1]):
                 db.delays.update_one(
                     {'line': str(trip['id'][7])},
                     {'$inc': {
                         'count': int((trip['timestamp'] - pred['arrival']))
-                        }
-                    })
+                        }}
+                    )
     return list(db.delays.find())
+
 
 @app.route('/')
 def index():
     return render_template('index.html', lines=lines, stops=stops)
+
 
 @app.route('/display')
 def display():
@@ -236,10 +286,17 @@ def display():
         trains = find(trips, stop, line)
         tn = len(trains)
         return jsonify(
-            {'data': render_template('trainfeed.html', trains=trains, stop=stop, station=station, trips=trips, tn=tn)}
+            {
+                'data': render_template(
+                    'trainfeed.html',
+                    trains=trains, stop=stop,
+                    station=station, trips=trips, tn=tn
+                    )
+                }
             )
     except Exception as e:
         return str(e)
+
 
 @app.route('/api/feed')
 def feed():
@@ -248,9 +305,10 @@ def feed():
     for code in codes:
         try:
             feed += collect(refresh(code))
-        except:
+        except Exception:
             pass
     return JSONEncoder().encode(feed)
+
 
 @app.route('/api/predictions')
 def predictions():
@@ -259,9 +317,10 @@ def predictions():
     for code in codes:
         try:
             feed += record_predictions(collect(refresh(code)))
-        except:
+        except Exception:
             pass
     return JSONEncoder().encode(list(db.predictions.find()))
+
 
 @app.route('/api/delays')
 def reckon():
@@ -273,12 +332,22 @@ def reckon():
     #     except:
     #         pass
     reckoning(db.trips.find())
-    return JSONEncoder().encode(sorted(list(db.delays.find()), key=lambda k: k['line']))
+    return JSONEncoder().encode(
+        sorted(
+            list(db.delays.find()), key=lambda k: k['line']
+            )
+        )
+
 
 @app.route('/api/delays/reset')
 def reset():
     reset_delays()
-    return JSONEncoder().encode(sorted(list(db.delays.find()), key=lambda k: k['line']))
+    return JSONEncoder().encode(
+        sorted(
+            list(db.delays.find()), key=lambda k: k['line']
+            )
+        )
+
 
 @celery.task
 def freshen():
@@ -287,9 +356,10 @@ def freshen():
     for code in codes:
         try:
             feed += collect(refresh(code))
-        except:
+        except Exception:
             pass
     return JSONEncoder().encode(feed)
+
 
 @celery.task
 def rec_pred():
@@ -298,14 +368,16 @@ def rec_pred():
     for code in codes:
         try:
             feed += record_predictions(collect(refresh(code)))
-        except:
+        except Exception:
             pass
     return JSONEncoder().encode(list(db.predictions.find()))
+
 
 @celery.task
 def clean():
     reset_delays()
     return JSONEncoder().encode(list(db.delays.find()))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
