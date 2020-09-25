@@ -1,9 +1,19 @@
 import os
+basedir = os.path.abspath(os.path.dirname(__file__))
 
-API_KEY = os.environ.get('API_KEY') or 'dbc89e494ed6952440e02af5038d2806'
+DEBUG = True
 
-MONGO_URI = os.environ.get('MONGO_URI')
+API_KEY = 'spY9U6KGDO9BY9pmHLnNy85hn3RfXK9j7Nb2VELF'
 
-BROKER_URL = os.environ['REDIS_URL']
+MONGO_URI = "mongodb://localhost:27017/trips_db"
 
-CELERY_RESULT_BACKEND = os.environ['REDIS_URL']
+BROKER_URL = "redis://localhost:6379/0"
+
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+
+ENV = 'development'
+
+SQLALCHEMY_DATABASE_URI = os.environ.get('SQLA_URL') or \
+    'sqlite:///' + os.path.join(basedir, 'app.db')
+
+SQLALCHEMY_TRACK_MODIFICATIONS = False

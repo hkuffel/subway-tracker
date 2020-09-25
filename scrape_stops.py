@@ -35,11 +35,11 @@ def get_listings(html):
             print(e)
     collection = [
         name.replace('\n', '').replace(' /', '').replace('   ', '') for name in collection
-        ]
+    ]
     collection = [
         name.replace('\t', '').replace('Street', 'St').replace('Avenue', 'Av')
             .replace('Road', 'Rd').replace('Square', 'Sq') for name in collection
-            ]
+    ]
     for i, name in enumerate(collection):
         if name[0] == ' ':
             collection[i] = name[1:]
