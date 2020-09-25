@@ -1,7 +1,7 @@
 from celery.schedules import crontab
 
 
-CELERY_IMPORTS = ('subway')
+CELERY_IMPORTS = ('subwaytracker')
 CELERY_TASK_RESULT_EXPIRES = 30
 CELERY_TIMEZONE = 'UTC'
 
@@ -11,18 +11,23 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 CELERYBEAT_SCHEDULE = {
     'freshen': {
-        'task': 'subway.freshen',
+        'task': 'subwaytracker.tasks.freshen',
         # Every minute
         'schedule': crontab(),
     },
-    'rec_pred': {
-        'task': 'subway.rec_pred',
-        # Every minute
-        'schedule': crontab(),
-    },
-    'clean': {
-        'task': 'subway.clean',
-        # Every minute
-        'schedule': crontab(minute=0, hour=5),
-    }
+    # 'rec_pred': {
+    #     'task': 'subwaytracker.tasks.rec_pred',
+    #     # Every minute
+    #     'schedule': crontab(),
+    # },
+    # 'reckon': {
+    #     'task': 'subwaytracker.tasks.reckon',
+    #     # Every minute
+    #     'schedule': crontab(),
+    # },
+    # 'clean': {
+    #     'task': 'subwaytracker.tasks.clean',
+    #     # Every minute
+    #     'schedule': crontab(minute=0, hour=5),
+    # }
 }
