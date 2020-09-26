@@ -6,15 +6,9 @@ from subwaytracker.utils import (
 )
 from flask import render_template, request, jsonify
 import pandas as pd
-import pytz
-import time
 from datetime import datetime
-import requests
 import json
 from bson import ObjectId
-from google.transit import gtfs_realtime_pb2
-from protobuf_to_dict import protobuf_to_dict
-from config import API_KEY
 from sqlalchemy import func, extract
 
 # Creating dictionary to map stop ids to the station name
@@ -42,30 +36,6 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(o, ObjectId):
             return str(o)
         return json.JSONEncoder.default(self, o)
-
-
-# would run every day at midnight when app is at full capacity
-def reset_delays():
-    """Reset the delay database."""
-    db.trips.drop()
-    db.predictions.drop()
-    db.delays.drop()
-    line_list = [
-        '1', '2', '3', '4', '5', '6', '7', 'A', 'B', 'C',
-        'D', 'E', 'F', 'G', 'H', 'J', 'L', 'M', 'N', 'Q', 'R', 'Z'
-    ]
-
-    colors = [
-        '#EE352E', '#EE352E', '#EE352E', '#00933C', '#00933C',
-        '#00933C', '#B933AD', '#2850AD', '#FF6319', '#2850AD', '#FF6319',
-        '#2850AD', '#FF6319', '#6CBE45', '#2850AD', '#996633', '#A7A9AC',
-        '#FF6319', '#FCCC0A', '#FCCC0A', '#FCCC0A', '#996633'
-    ]
-
-    delay_cache = [
-        {'line': line_list[i], 'count': 0, 'color': colors[i]} for i in range(len(colors))
-    ]
-    db.delays.insert_many(delay_cache)
 
 
 @app.route('/')
@@ -166,13 +136,3 @@ def show_reckoning():
         delay_amount = o[1]
         returnarr.append({'line': line, 'color': color, 'count': delay_amount})
     return jsonify(returnarr)
-
-
-@app.route('/api/delays/reset')
-def reset():
-    reset_delays()
-    return JSONEncoder().encode(
-        sorted(
-            list(db.delays.find()), key=lambda k: k['line']
-        )
-    )
