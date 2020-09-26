@@ -1,5 +1,9 @@
 from subwaytracker import app, db
 from subwaytracker.models import delay, visit, station
+from subwaytracker.utils import (
+    refresh, extract_trip_details, add_delay_instance,
+    add_trip_instance, add_visit_instance, read_time
+)
 from flask import render_template, request, jsonify
 import pandas as pd
 import pytz
@@ -40,82 +44,6 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-def refresh(line_num):
-    """Retrieves fresh data from the MTA."""
-    feed = gtfs_realtime_pb2.FeedMessage()
-    response = requests.get(
-        f'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs{str(line_num)}',
-        headers={'x-api-key': API_KEY}
-    )
-    feed.ParseFromString(response.content)
-
-    # Taking the transit data from its specific format into a dictionary
-    subway_feed = protobuf_to_dict(feed)
-    return subway_feed['entity']
-
-
-# Function to comb through trip parts and combine those that share ids
-def combine(trips):
-    for i, trip in enumerate(trips):
-        for trip in trips[i:]:
-            if trips[i]['id'] == trip['id']:
-                trips[i].update(trip)
-    trips = [trip for trip in trips if 'pred_stops' in trip.keys()]
-    return trips
-
-
-def collect(feed):
-    trips = []
-    for t in feed:
-        if 'trip_update' in t.keys() and 'stop_time_update' in t['trip_update'].keys():
-            # Assigning necessary information to variables
-            trip_id = t['trip_update']['trip']['trip_id']
-            route_id = t['trip_update']['trip']['route_id']
-            stops = t['trip_update']['stop_time_update']
-            try:
-                trips.append({
-                    'id': trip_id,
-                    'line': route_id,
-                    'pred_stops': [
-                        {
-                            'stop': stop['stop_id'],
-                            'arrival': stop['arrival']['time']
-                        } for stop in stops
-                    ]
-                })
-            except KeyError:  # Not every trip in the MTA feed will have predictions
-                pass
-        elif 'vehicle' in t.keys() and 'timestamp' in t['vehicle'].keys():
-            tri = {
-                'id': t['vehicle']['trip']['trip_id'],
-                'timestamp': t['vehicle']['timestamp']
-            }
-            try:
-                tri['cs'] = t['vehicle']['stop_id']
-            except Exception:
-                pass
-            trips.append(tri)
-    # Combine the two elements of each trip
-    trips = combine(trips)
-    # Dumping the collected the data into a MongoDB collection
-    db.trips.insert_many(trips)
-    return list(db.trips.find())
-
-
-def record_predictions(trips):
-    """Find trips that haven't yet started and record the first predictions in the db."""
-    for t in trips:
-        if db.predictions.find({'id': t['id']}).count() > 0:
-            try:
-                if len(t['pred_stops']) < 2:
-                    db.predictions.delete_one({'id': t['id']})
-            except Exception:
-                pass
-        else:
-            db.predictions.insert_one(t)
-    return list(db.predictions.find())
-
-
 # would run every day at midnight when app is at full capacity
 def reset_delays():
     """Reset the delay database."""
@@ -138,52 +66,6 @@ def reset_delays():
         {'line': line_list[i], 'count': 0, 'color': colors[i]} for i in range(len(colors))
     ]
     db.delays.insert_many(delay_cache)
-
-
-def reckoning(trips):
-    """Match trips with their initial predictions and add new delays to the db."""
-    trips = [trip for trip in trips if 'timestamp' in trip.keys() and 'cs' in trip.keys()]
-    for trip in trips:
-        preds = list(db.predictions.find({'id': trip['id']}).limit(1))
-        try:
-            preds = preds[0]['pred_stops']
-        except Exception:
-            continue
-        for pred in preds:
-            if (pred['stop'] == trip['cs']
-                    or pred['stop'][:-1] == trip['cs'] or pred['stop'] == trip['cs'][:-1]):
-                db.delays.update_one(
-                    {'line': str(trip['id'][7])},
-                    {'$inc': {
-                        'count': int((trip['timestamp'] - pred['arrival']))
-                    }}
-                )
-    return list(db.delays.find())
-
-
-def read_time(stamp):
-    """Convert unix timestamp into something more readable"""
-    dt_stamp = datetime.utcfromtimestamp(int(stamp))
-    gdt = pytz.timezone('GMT').localize(dt_stamp)
-    edt = gdt.astimezone(pytz.timezone('US/Eastern'))
-    return edt.strftime('%Y-%m-%d %I:%M:%S %p')
-
-
-def find(tl, stop, line):
-    """Compile trains headed to a stop and sort them by arrival time."""
-    trains = []
-    for t in tl:
-        if 'pred_stops' in t.keys() and t['line'] == line:
-            for s in t['pred_stops']:
-                if s['stop'] == stop and s['arrival'] > time.time():
-                    # Converting the timestamps and stop codes into readable versions
-                    s['arrival'] = read_time(s['arrival'])
-                    s['stop'] = stops[s['stop']]
-                    s['id'] = t['id']
-                    s['line'] = t['line']
-                    trains.append(s)
-    trains = sorted(trains, key=lambda i: i['arrival'])
-    return trains
 
 
 @app.route('/')
@@ -223,7 +105,7 @@ def display():
         stop = stop + d
         train_arr = []
         for t in trains:
-            arrivalstr = t[1].strftime('%I:%M %p')
+            arrivalstr = read_time(t[1])
             train_arr.append({'line': t[0], 'arrival': arrivalstr})
         tn = len(trains)
         return jsonify(
@@ -241,25 +123,11 @@ def display():
 
 @app.route('/api/feed')
 def feed():
-    # codes = ['', '-ace', '-bdfm', '-g', '-l', '-7', '-jz', '-nqrw']
-    # feed = []
-    # for code in codes:
-    #     try:
-    #         feed += collect(refresh(code))
-    #     except Exception:
-    #         pass
-    return JSONEncoder().encode(list(db.trips.find()))
+    return jsonify(json.dumps(visit.query.all()))
 
 
 @app.route('/api/predictions')
 def predictions():
-    # codes = ['', '-ace', '-bdfm', '-g', '-l', '-7', '-jz', '-nqrw']
-    # feed = []
-    # for code in codes:
-    #     try:
-    #         feed += record_predictions(collect(refresh(code)))
-    #     except Exception:
-    #         pass
     return JSONEncoder().encode(list(db.predictions.find()))
 
 
@@ -268,6 +136,12 @@ def show_reckoning():
     delay_query = db.session.query(
         delay.line_id,
         func.sum(delay.delay_amount).label('delay')
+    ).filter(
+        extract('month', delay.timestamp) == datetime.today().month
+    ).filter(
+        extract('year', delay.timestamp) == datetime.today().year
+    ).filter(
+        extract('day', delay.timestamp) == datetime.today().day
     ).group_by(
         delay.line_id
     ).all()
@@ -292,11 +166,6 @@ def show_reckoning():
         delay_amount = o[1]
         returnarr.append({'line': line, 'color': color, 'count': delay_amount})
     return jsonify(returnarr)
-    # JSONEncoder().encode(
-    #     sorted(
-    #         list(db.delays.find()), key=lambda k: k['line']
-    #     )
-    # )
 
 
 @app.route('/api/delays/reset')
