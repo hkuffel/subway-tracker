@@ -11,7 +11,7 @@ from bson import ObjectId
 from google.transit import gtfs_realtime_pb2
 from protobuf_to_dict import protobuf_to_dict
 from config import API_KEY
-from sqlalchemy import func
+from sqlalchemy import func, extract
 
 # Creating dictionary to map stop ids to the station name
 df = pd.read_csv('stops.csv')[
@@ -209,11 +209,22 @@ def display():
             visit.direction == d
         ).filter(
             visit.arrival_time == None
+        ).filter(
+            extract('month', visit.pred_arrival_time) == datetime.today().month
+        ).filter(
+            extract('year', visit.pred_arrival_time) == datetime.today().year
+        ).filter(
+            extract('day', visit.pred_arrival_time) == datetime.today().day
+        ).filter(
+            extract('hour', visit.pred_arrival_time) >= datetime.today().hour
+        ).filter(
+            extract('minute', visit.pred_arrival_time) >= datetime.today().minute
         ).all()[:10]
         stop = stop + d
         train_arr = []
         for t in trains:
-            train_arr.append({'line': t[0], 'arrival': str(t[1])})
+            arrivalstr = t[1].strftime('%I:%M %p')
+            train_arr.append({'line': t[0], 'arrival': arrivalstr})
         tn = len(trains)
         return jsonify(
             {
