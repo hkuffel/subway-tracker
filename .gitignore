@@ -4,7 +4,7 @@ venv
 .env
 key.py
 instance/
-.vscode
+.vscode/
 *.vscode
 *.rdb
 app.db-journal
