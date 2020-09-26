@@ -117,7 +117,7 @@ def add_visit_instance(trip_id, route_id, line_id, visit_dict):
         line_id=line_id,
         direction=direction,
         arrival_time=None,
-        pred_arrival_time=datetime.utcfromtimestamp(int(visit_dict['arrival']['time']))
+        pred_arrival_time=read_time(visit_dict['arrival']['time'])
     )
     db.session.add(visit_instance)
 
@@ -189,7 +189,7 @@ def add_trip_instance(t):
                 models.trip.start_time == date_str
             ).all()[0].id
             station = re.sub('[NS]$', '', t['vehicle']['stop_id'])
-            timestamp = datetime.utcfromtimestamp(int(t['vehicle']['timestamp']))
+            timestamp = read_time(t['vehicle']['timestamp'])
             try:
                 visit_to_update = models.visit.query.filter(
                     models.visit.trip_id == trip_id
@@ -320,7 +320,7 @@ def read_time(stamp):
     dt_stamp = datetime.utcfromtimestamp(int(stamp))
     gdt = pytz.timezone('GMT').localize(dt_stamp)
     edt = gdt.astimezone(pytz.timezone('US/Eastern'))
-    return edt.strftime('%Y-%m-%d %I:%M:%S %p')
+    return edt
 
 
 def find(tl, stop, line):
