@@ -220,13 +220,11 @@ function update() {
     var leftAxis = d3.axisLeft(yScale).tickSize(0);
     chartGroup.selectAll(".bar")
     .data(delayData)
-    .transition().duration(250)
+    .transition().duration(500)
     .attr("x", d => xAxisScale(Math.min(0, (d.count/60))))
     .attr("y", d => yScale(d.line))
-    .attr("fill", d => d.color)
     .attr("width", d => Math.abs(xAxisScale(d.count/60) - xAxisScale(0)))
     .attr("height", yScale.bandwidth())
-    .attr("opacity", ".75")
 
     chartGroup.selectAll(".xaxis")
     .transition().duration(250)
