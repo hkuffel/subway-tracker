@@ -181,7 +181,7 @@ def add_trip_instance(db, models, t):
                 + string.ascii_lowercase
                 + string.digits
             ) for _ in range(24))
-            line_id = t['trip_update']['trip']['route_id']
+            line_id = t['trip_update']['trip']['route_id'][:1]
             try:
                 if t['vehicle']['current_stop_sequence'] > 1:
                     has_started = True
