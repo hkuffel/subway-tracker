@@ -1,4 +1,4 @@
-from subwaytracker import celery, db, models
+from subwaytracker import celery, db, models, celeryio
 from subwaytracker.utils import (
     refresh, extract_trip_details, add_delay_instance,
     add_trip_instance, add_visit_instance, read_time
@@ -28,3 +28,4 @@ def freshen():
             collect(refresh(code))
         except Exception:
             pass
+    celeryio.emit('my event', {'data': 'we heard you!'})

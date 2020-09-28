@@ -1,6 +1,6 @@
-from flask_pymongo import PyMongo
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_socketio import SocketIO, emit, send
 from flask_migrate import Migrate
 from sqlalchemy import MetaData
 from celery import Celery
@@ -11,6 +11,7 @@ from config import MONGO_URI, BROKER_URL
 app = Flask(__name__)
 app.config.from_object('config')
 app.config.from_pyfile('instance/config.py')
+celeryio = SocketIO(app, message_queue='redis://')
 
 convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -48,4 +49,4 @@ from subwaytracker import tasks, views, models
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(app, debug=True)
