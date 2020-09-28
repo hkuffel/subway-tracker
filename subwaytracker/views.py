@@ -112,6 +112,10 @@ def show_reckoning():
         extract('year', delay.timestamp) == datetime.today().year
     ).filter(
         extract('day', delay.timestamp) == datetime.today().day
+    ).filter(
+        delay.line_id.notilike("%x%")
+    ).filter(
+        delay.line_id.notilike("%s%")
     ).group_by(
         delay.line_id
     ).all()
