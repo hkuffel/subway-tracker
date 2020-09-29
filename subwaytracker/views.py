@@ -112,6 +112,10 @@ def show_reckoning():
         extract('year', delay.timestamp) == datetime.today().year
     ).filter(
         extract('day', delay.timestamp) == datetime.today().day
+    ).filter(
+        delay.line_id.notilike("%x%")
+    ).filter(
+        delay.line_id.notilike("%s%")
     ).group_by(
         delay.line_id
     ).all()
@@ -135,4 +139,45 @@ def show_reckoning():
             color = '#996633'
         delay_amount = o[1]
         returnarr.append({'line': line, 'color': color, 'count': delay_amount})
+    return jsonify(returnarr)
+
+
+@app.route('/api/delays/2')
+def show_one_reckoning():
+    delay_query = db.session.query(
+        delay.station_name,
+        func.sum(delay.delay_amount).label('delay')
+    ).filter(
+        extract('month', delay.timestamp) == datetime.today().month
+    ).filter(
+        extract('year', delay.timestamp) == datetime.today().year
+    ).filter(
+        extract('day', delay.timestamp) == datetime.today().day
+    ).filter(
+        delay.line_id == '2'
+    ).group_by(
+        delay.station_name
+    ).order_by(
+        func.sum(delay.delay_amount).desc()
+    ).limit(10).all()
+    line_list = [
+        '1', '2', '3', '4', '5', '5X', '6', '7', 'A', 'B', 'C',
+        'D', 'E', 'F', 'G', 'H', 'J', 'L', 'M', 'N', 'Q', 'R', 'Z'
+    ]
+    colors = [
+        '#EE352E', '#EE352E', '#EE352E', '#00933C', '#00933C', '#00933C',
+        '#00933C', '#B933AD', '#2850AD', '#FF6319', '#2850AD', '#FF6319',
+        '#2850AD', '#FF6319', '#6CBE45', '#2850AD', '#996633', '#A7A9AC',
+        '#FF6319', '#FCCC0A', '#FCCC0A', '#FCCC0A', '#996633'
+    ]
+    colordict = {l: colors[i] for i, l in enumerate(line_list)}
+    returnarr = []
+    for o in delay_query:
+        s_name = o[0]
+        try:
+            color = '#EE352E'
+        except KeyError:
+            color = '#996633'
+        delay_amount = o[1]
+        returnarr.append({'station': s_name, 'color': color, 'count': delay_amount})
     return jsonify(returnarr)

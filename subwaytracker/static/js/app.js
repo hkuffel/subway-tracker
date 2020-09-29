@@ -1,3 +1,12 @@
+$(document).ready(function() {
+  var socket = io.connect('http://' + document.domain + ':' + location.port);
+  socket.on('my event', function(msg) {
+    d3.json("/api/delays").then(function(delayData) {
+      update(delayData)
+    });
+  });
+});
+
 $('a#process_input').click(function($e) {
     $e.preventDefault();
     $.getJSON('/display', {
@@ -173,6 +182,7 @@ d3.json("/api/delays").then(function(delayData) {
     .enter()
     .append("rect")
     .attr("class", "bar")
+    .attr("id", d => d.line)
     .attr("x", d => xAxisScale(Math.min(0, (d.count/60))))
     .attr("y", d => yScale(d.line))
     .attr("fill", d => d.color)
@@ -183,10 +193,49 @@ d3.json("/api/delays").then(function(delayData) {
     .on('mouseout', toolTip.hide);
   
   chartGroup.append("g")
+    .attr("class", "xaxis")
     .attr("transform", `translate(${xAxisScale(0)}, 0)`)
     .call(leftAxis);
 
   chartGroup.append("g")
+    .attr("class", "bottomaxis")
     .attr("transform", `translate(0, ${chartHeight})`)
     .call(bottomAxis);
 });
+
+function update(delayData) {
+  var yScale = d3.scaleBand()
+  .domain(delayData.map(d => d.line))
+  .range([0, chartHeight])
+  .padding(0.1);
+
+  // Create a linear scale for the vertical axis.
+  var xScale = d3.scaleLinear()
+    .domain([d3.max(delayData, d => (d.count/60)), 0])
+    .range([chartWidth, 0]);
+  
+  var xAxisScale = d3.scaleLinear()
+    .domain([d3.min(delayData, d => (d.count/60)), d3.max(delayData, d => (d.count/60))])
+    .range([0, chartWidth]);
+
+  var bottomAxis = d3.axisBottom(xAxisScale).ticks(15);
+  var leftAxis = d3.axisLeft(yScale).tickSize(0);
+  chartGroup.selectAll(".bar")
+  .data(delayData)
+  .transition().duration(500)
+  .attr("x", d => xAxisScale(Math.min(0, (d.count/60))))
+  .attr("y", d => yScale(d.line))
+  .attr("width", d => Math.abs(xAxisScale(d.count/60) - xAxisScale(0)))
+  .attr("height", yScale.bandwidth())
+
+  chartGroup.selectAll(".xaxis")
+  .transition().duration(250)
+  .attr("transform", `translate(${xAxisScale(0)}, 0)`)
+  .call(leftAxis)
+
+  chartGroup.selectAll(".bottomaxis")
+  .transition().duration(250)
+  .attr("transform", `translate(0, ${chartHeight})`)
+  .call(bottomAxis);
+  console.log('this is where I would be updating.')
+}
