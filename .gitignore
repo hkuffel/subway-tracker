@@ -7,5 +7,9 @@ instance/
 .vscode/
 *.vscode
 *.rdb
+<<<<<<< HEAD
 app.db-journal
 expressions.txt
+=======
+app.db-journal
+>>>>>>> f6dbc96fac5be9e29c967dd4525596ee69fd0d7a
