@@ -3,7 +3,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 DEBUG = True
 
-***REMOVED***
+API_KEY = os.environ.get('API_KEY')
 
 BROKER_URL = "redis://localhost:6379/0"
 
