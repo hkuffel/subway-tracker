@@ -8,3 +8,4 @@ instance/
 *.vscode
 *.rdb
 app.db-journal
+expressions.txt
