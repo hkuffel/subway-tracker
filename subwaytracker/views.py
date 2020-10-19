@@ -5,21 +5,16 @@ from subwaytracker.utils import (
     add_trip_instance, add_visit_instance, read_time
 )
 from flask import render_template, request, jsonify
-import pandas as pd
+import csv
 from datetime import datetime
 import json
 from bson import ObjectId
 from sqlalchemy import func, extract
 
 # Creating dictionary to map stop ids to the station name
-df = pd.read_csv('stops.csv')[
-    [
-        'stop_id', 'stop_name', 'stop_lat', 'stop_lon',
-        'location_type', 'parent_station'
-    ]
-]
-stop_pairs = zip(df['stop_id'], df['stop_name'])
-stops = dict(stop_pairs)
+with open('stops.csv') as stopsfile:
+    reader = csv.DictReader(stopsfile)
+    stops = {row['stop_id']: row['stop_name'] for row in reader}
 
 # Dict mapping subway lines to the proper url suffix
 lines = {

@@ -6,7 +6,7 @@ from sqlalchemy import MetaData
 from celery import Celery
 import celeryconfig
 
-from config import MANGO_URI, BROKER_URL
+from config import BROKER_URL
 
 app = Flask(__name__)
 app.config.from_object('config')

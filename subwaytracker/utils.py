@@ -1,4 +1,3 @@
-import pandas as pd
 import pytz
 import time
 from datetime import datetime
