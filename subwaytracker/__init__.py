@@ -10,7 +10,7 @@ from config import BROKER_URL
 
 app = Flask(__name__)
 app.config.from_object('config')
-app.config.from_pyfile('instance/config.py')
+# app.config.from_pyfile('instance/config.py')
 celeryio = SocketIO(app, message_queue='redis://')
 
 convention = {
