@@ -49,4 +49,4 @@ from subwaytracker import tasks, views, models
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
+    celeryio.run(app, debug=True)

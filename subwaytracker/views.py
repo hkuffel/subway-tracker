@@ -1,5 +1,5 @@
 from subwaytracker import app, db
-from subwaytracker.models import delay, visit, station
+from subwaytracker.models import delay, visit, station, trip
 from subwaytracker.utils import (
     refresh, extract_trip_details, add_delay_instance,
     add_trip_instance, add_visit_instance, read_time
@@ -88,7 +88,14 @@ def display():
 
 @app.route('/api/feed')
 def feed():
-    return jsonify(json.dumps(visit.query.all()))
+    feed_query = db.session.query(
+        trip.line_id,
+        trip.route_id,
+        trip.start_time
+    ).order_by(
+        trip.start_time.desc()
+    ).limit(100)
+    return jsonify([{'line': v[0], 'route': v[1], 'time': v[2]} for v in feed_query])
 
 
 @app.route('/api/predictions')
