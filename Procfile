@@ -1,3 +1,3 @@
-web: gunicorn subway:app
-worker: celery worker -A subway.celery -l info --purge
-beat: celery beat -A subway.celery
+web: gunicorn subwaytracker:app
+worker: celery worker -A subwaytracker.celery -l info --purge
+beat: celery beat -A subwaytracker.celery
