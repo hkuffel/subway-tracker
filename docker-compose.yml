@@ -1,0 +1,71 @@
+version: "3.6"
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  data:
+    image: postgres:latest
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    command: "true"
+  postgresql:
+    restart: always
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: subway-tracker
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    expose:
+      - "8026"
+    ports:
+      - "8026:8026"
+    command: -p 8026
+  migration:
+    build: .
+    environment:
+      APP_ENV: ${APP_ENV}
+      FLASK_APP: subwaytracker
+      STOPS_CSV_PATH: 'stops.csv'
+    command: flask db upgrade
+    links:
+      - postgresql:postgresql
+    depends_on:
+      - postgresql
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      APP_ENV: ${APP_ENV}
+    volumes:
+      - web-data:/subwaytracker/static
+    links:
+      - migration
+      - postgresql:postgresql
+      - redis 
+    depends_on:
+     - redis
+     - migration
+  worker:
+    build: .
+    command: celery worker -A subwaytracker.celery -l info
+    environment:
+      APP_ENV: ${APP_ENV}
+    links:
+      - redis 
+    depends_on:
+      - redis
+  beat:
+    build: .
+    command: celery beat -A subwaytracker.celery -l info
+    environment:
+      APP_ENV: ${APP_ENV}
+    links:
+      - redis 
+    depends_on:
+      - redis
+volumes:
+  db-data:
+  web-data:

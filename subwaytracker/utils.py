@@ -1,18 +1,19 @@
-import pytz
-import time
-from datetime import datetime
-import requests
-import json
 from bson import ObjectId
-from google.transit import gtfs_realtime_pb2
-from protobuf_to_dict import protobuf_to_dict
-from config import API_KEY
-import random
-import string
-from itertools import groupby
 from collections import ChainMap
+from itertools import groupby
+import json
+import os
 from _operator import itemgetter
 import re
+import random
+import string
+import time
+
+from datetime import datetime
+from google.transit import gtfs_realtime_pb2
+from protobuf_to_dict import protobuf_to_dict
+import pytz
+import requests
 
 
 def extract_trip_details(trip_instance):
@@ -77,7 +78,7 @@ def refresh(line_code):
     feed = gtfs_realtime_pb2.FeedMessage()
     response = requests.get(
         f'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs{str(line_code)}',
-        headers={'x-api-key': API_KEY}
+        headers={'x-api-key': os.environ.get('API_KEY')}
     )
     feed.ParseFromString(response.content)
 
