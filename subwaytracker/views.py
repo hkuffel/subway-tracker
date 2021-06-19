@@ -47,7 +47,9 @@ def display():
         print(stop)
         d = request.args.get('direction', type=str)
         print(d)
+        i = 0
         station_name = db.session.query(station.name).filter(station.id == stop).first()[0]
+        i = 1
         trains = db.session.query(visit.line_id, visit.pred_arrival_time).filter(
             visit.line_id == line
         ).filter(
@@ -69,9 +71,11 @@ def display():
         ).all()[:10]
         stop = stop + d
         train_arr = []
+        i = 2
         for t in trains:
             arrivalstr = read_time(t[1])
             train_arr.append({'line': t[0], 'arrival': arrivalstr})
+            i = i + 1
         tn = len(trains)
         return jsonify(
             {
@@ -83,7 +87,7 @@ def display():
             }
         )
     except Exception as e:
-        return f'There was an error: {str(e)}.'
+        return f'There was an error {i}: {str(e)}.'
 
 
 @app.route('/api/feed')
@@ -141,45 +145,4 @@ def show_reckoning():
             color = '#996633'
         delay_amount = o[1]
         returnarr.append({'line': line, 'color': color, 'count': delay_amount})
-    return jsonify(returnarr)
-
-
-@app.route('/api/delays/2')
-def show_one_reckoning():
-    delay_query = db.session.query(
-        delay.station_name,
-        func.sum(delay.delay_amount).label('delay')
-    ).filter(
-        extract('month', delay.timestamp) == datetime.today().month
-    ).filter(
-        extract('year', delay.timestamp) == datetime.today().year
-    ).filter(
-        extract('day', delay.timestamp) == datetime.today().day
-    ).filter(
-        delay.line_id == '2'
-    ).group_by(
-        delay.station_name
-    ).order_by(
-        func.sum(delay.delay_amount).desc()
-    ).limit(10).all()
-    line_list = [
-        '1', '2', '3', '4', '5', '5X', '6', '7', 'A', 'B', 'C',
-        'D', 'E', 'F', 'G', 'H', 'J', 'L', 'M', 'N', 'Q', 'R', 'Z'
-    ]
-    colors = [
-        '#EE352E', '#EE352E', '#EE352E', '#00933C', '#00933C', '#00933C',
-        '#00933C', '#B933AD', '#2850AD', '#FF6319', '#2850AD', '#FF6319',
-        '#2850AD', '#FF6319', '#6CBE45', '#2850AD', '#996633', '#A7A9AC',
-        '#FF6319', '#FCCC0A', '#FCCC0A', '#FCCC0A', '#996633'
-    ]
-    colordict = {l: colors[i] for i, l in enumerate(line_list)}
-    returnarr = []
-    for o in delay_query:
-        s_name = o[0]
-        try:
-            color = '#EE352E'
-        except KeyError:
-            color = '#996633'
-        delay_amount = o[1]
-        returnarr.append({'station': s_name, 'color': color, 'count': delay_amount})
     return jsonify(returnarr)

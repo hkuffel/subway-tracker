@@ -5,7 +5,6 @@ from subwaytracker.utils import (
 )
 import json
 from bson import ObjectId
-from config import API_KEY
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -29,5 +28,4 @@ def freshen():
             collect(refresh(code))
         except Exception as e:
             print(e)
-            print(API_KEY)
     celeryio.emit('my event', {'data': 'we heard you!'})
