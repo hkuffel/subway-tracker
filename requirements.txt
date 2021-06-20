@@ -39,7 +39,7 @@ python-engineio==3.13.2
 python-socketio==4.6.0
 pytz==2019.3
 redis==3.3.11
-requests==2.22.0
+requests==2.25.0
 selenium==3.141.0
 six==1.12.0
 soupsieve==1.9.5
