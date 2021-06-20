@@ -39,6 +39,7 @@ services:
       - "5000:5000"
     environment:
       APP_ENV: ${APP_ENV}
+      API_KEY: ${API_KEY}
     volumes:
       - web-data:/subwaytracker/static
     links:
@@ -53,6 +54,7 @@ services:
     command: celery worker -A subwaytracker.celery -l info
     environment:
       APP_ENV: ${APP_ENV}
+      API_KEY: ${API_KEY}
     links:
       - redis 
     depends_on:
@@ -62,6 +64,7 @@ services:
     command: celery beat -A subwaytracker.celery -l info
     environment:
       APP_ENV: ${APP_ENV}
+      API_KEY: ${API_KEY}
     links:
       - redis 
     depends_on:

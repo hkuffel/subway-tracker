@@ -49,6 +49,7 @@ def display():
         print(d)
         i = 0
         station_name = db.session.query(station.name).filter(station.id == stop).first()[0]
+        print(f'station name: {station_name}')
         i = 1
         trains = db.session.query(visit.line_id, visit.pred_arrival_time).filter(
             visit.line_id == line
@@ -58,16 +59,6 @@ def display():
             visit.direction == d
         ).filter(
             visit.arrival_time == None
-        ).filter(
-            extract('month', visit.pred_arrival_time) == datetime.today().month
-        ).filter(
-            extract('year', visit.pred_arrival_time) == datetime.today().year
-        ).filter(
-            extract('day', visit.pred_arrival_time) == datetime.today().day
-        ).filter(
-            extract('hour', visit.pred_arrival_time) >= datetime.today().hour
-        ).filter(
-            extract('minute', visit.pred_arrival_time) >= datetime.today().minute
         ).all()[:10]
         stop = stop + d
         train_arr = []
@@ -112,17 +103,9 @@ def show_reckoning():
     delay_query = db.session.query(
         delay.line_id,
         func.sum(delay.delay_amount).label('delay')
-    ).filter(
-        extract('month', delay.timestamp) == datetime.today().month
-    ).filter(
-        extract('year', delay.timestamp) == datetime.today().year
-    ).filter(
-        extract('day', delay.timestamp) == datetime.today().day
-    ).filter(
-        delay.line_id.notilike("%x%")
-    ).filter(
-        delay.line_id.notilike("%s%")
     ).group_by(
+        delay.line_id
+    ).order_by(
         delay.line_id
     ).all()
     line_list = [

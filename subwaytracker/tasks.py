@@ -1,3 +1,4 @@
+import os
 from subwaytracker import celery, db, models, celeryio
 from subwaytracker.utils import (
     refresh, extract_trip_details, add_delay_instance,
@@ -28,4 +29,5 @@ def freshen():
             collect(refresh(code))
         except Exception as e:
             print(e)
+            print('I JUST TRIED TO COMMIT SOMETHING TO THE DB AND IT DIDNT WORK')
     celeryio.emit('my event', {'data': 'we heard you!'})

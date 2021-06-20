@@ -4,68 +4,29 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
   <title>Subway Tracker</title>
-  <meta content="" name="descriptison">
-  <meta content="" name="keywords">
-
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css?family=Raleway:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
-
-  <!-- Vendor CSS Files -->
+  <link rel='stylesheet' href='//cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/hack-subset.css'>
   <link href="static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="static/vendor/icofont/icofont.min.css" rel="stylesheet">
-  <link href="static/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-  <link href="static/vendor/owl.carousel/css/owl.carousel.min.css" rel="stylesheet">
-  <link href="static/vendor/venobox/venobox.css" rel="stylesheet">
-  <link href="static/vendor/aos/aos.css" rel="stylesheet">
-
-  <!-- Template Main CSS File -->
   <link href="static/css/style.css" rel="stylesheet">
-
-  <!-- =======================================================
-  * Template Name: Plato - v2.0.0
-  * Template URL: https://bootstrapmade.com/plato-responsive-bootstrap-website-template/
-  * Author: BootstrapMade.com
-  * License: https://bootstrapmade.com/license/
-  ======================================================== -->
 </head>
 
 <body>
-  <div class="wrap">
-
-    <!-- ======= Hero Section ======= -->
-    <section id="hero">
-      <div class="hero-container">
+  <header id="header" class="d-flex align-items-center">
+    <div class="container d-flex align-items-center">
+      <div class="logo mr-auto">
         <h1>MTA Subway Tracker</h1>
-        <h2>Welcome! Choose your train line and your stop to see when the next train is coming. Or, scroll down to see 
-          how late each train line has been today.</h2>
-        <a href="#countdown" class="btn-get-started scrollto">Get Started</a>
       </div>
-    </section><!-- End Hero -->
+    </div>
+  </header>
 
-    <!-- ======= Header ======= -->
-    <header id="header" class="d-flex align-items-center">
-      <div class="container d-flex align-items-center">
-        <div class="logo mr-auto">
-          <h1 class="text-light"><a href="index.html"><span>Subway Tracker</span></a></h1>
-        </div>
-      </div>
-    </header><!-- End Header -->
-
-    <main id="main">
-
-      <!-- ======= Countdown Section ======= -->
-      <section id="countdown" class="countdown">
+  <main id="main">
+    <section id="countdown" class="countdown">
       <div class="container">
-          <div class="content d-flex flex-column justify-content-center" data-aos="fade-left">
-              <h3>Countdown Clock</h3>
-              <p>
-                Choose a line, a stop and a direction, and see when the next train is scheduled to arrive. 
-                To see all trains at a given station, choose the "All Lines" option.
-              </p>
-            </div>
+        <div class="content d-flex flex-column justify-content-center">
+          <h3>Welcome! Choose your train line and your stop to see when the next train is coming. Or, scroll down to see 
+            how late each train line has been today.</h3>
+            <br/>
+        </div>
         <div class="row">
           <div class="col-lg-6 col-md-6 col-sm-12">
               <div class="row">
@@ -114,43 +75,26 @@
           </div>
         </div>
       </div>
-    </section><!-- End Countdown -->
+    </section>
 
-
-      <!-- ======= delays Section ======= -->
-      <section id="delays" class="delays">
-          <div class="container text-center justify-content-center">
-            <h2 class="display-4">Total Train Delays Today by Line</h2>
-            <div class="row text-center justify-content-center">
-                <div id="delays"></div>
-            </div>
+    <section id="delays" class="delays">
+        <div class="container text-center justify-content-center">
+          <h2 class="display-4">Total Train Delays Today by Line</h2>
+          <div class="row text-center justify-content-center">
+              <div id="delays"></div>
           </div>
-      </section><!-- End delays Section -->
+        </div>
+    </section>
 
-
-      <!-- ======= Cta Section ======= -->
-
-  </div>
-
-  <a href="#" class="back-to-top"><i class="icofont-simple-up"></i></a>
-
-  <!-- Vendor JS Files -->
   <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
   <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ url_for('static', filename='vendor/jquery.easing/jquery.easing.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendor/php-email-form/validate.js') }}"></script>
   <script src="{{ url_for('static', filename='vendor/jquery-sticky/jquery.sticky.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendor/isotope-layout/isotope.pkgd.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendor/venobox/venobox.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendor/owl.carousel/owl.carousel.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='vendor/aos/aos.js') }}"></script>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 
-  <!-- Template Main JS File -->
   <script src="static/js/main.js"></script>
   <script src="static/js/app.js"></script>
 </body>
-        
 </html>

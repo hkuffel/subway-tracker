@@ -11,9 +11,6 @@ import config
 
 app = Flask(__name__)
 app.config.from_object('config')
-app.config.update(
-    FLASK_ENV='development'
-)
 celeryio = SocketIO(app, message_queue=app.config['REDIS_PATH'])
 
 convention = {
