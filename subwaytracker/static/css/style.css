@@ -2,26 +2,27 @@
 body {
   font-family: "hack";
   color: #444444;
-  background-color: #fdf6e3;
+  background-color: #002b36;
 }
 
 a {
-  color: #073642;
+  color: #93a1a1;
 }
 
 a:hover {
-  color: #073642;
+  color: #93a1a1;
   text-decoration: none;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: "hack"
+h1, h2, h3, h4, h5, h6, label {
+  font-family: "hack";
+  color: #93a1a1;
 }
 
 .wrap {
   max-width: 1440px;
   margin: auto;
-  background: #fdf6e3;
+  background: #002b36;
   box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.1);
 }
 
@@ -31,18 +32,19 @@ svg {
 }
 
 .btn {
-  background-color: #002b36;
-  border-color: #002b36;
+  background-color: #fdf6e3;
+  border-color: #fdf6e3;
+  color: #002b36
 }
 
 .btn:hover {
-  background-color: #073642;
-  border-color: #073642;
+  background-color: #eee8d5;
+  border-color: #eee8d5;
 }
 
 @media screen and (min-width: 601px) {
   h2.display-4 {
-    font-size: 60px;
+    font-size: 45px;
   }
 }
   
@@ -72,7 +74,7 @@ svg {
   transition: all 0.5s;
   z-index: 997;
   transition: all 0.5s;
-  background: #fdf6e3;
+  background: #002b36;
   box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.1);
 }
 
@@ -116,7 +118,7 @@ section {
 .section-title span {
   position: absolute;
   top: 30px;
-  color: #fdf6e3;
+  color: #002b36;
   left: 0;
   right: 0;
   z-index: 1;
